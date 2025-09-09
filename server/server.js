@@ -11,27 +11,25 @@ import authRoute from "./routes/auth.route.js";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 
-const app = express();
 dotenv.config();
+const app = express();
 
-const connectDB = async () => {
-  try {
-    await mongoose.connect(process.env.MONGO);
-    console.log("Connected to MongoDB");
-  } catch (error) {
-    console.log(error);
-  }
-};
+// Connect MongoDB as soon as app is initialized
+mongoose
+  .connect(process.env.MONGO)
+  .then(() => console.log("✅ Connected to MongoDB"))
+  .catch((err) => console.error("❌ MongoDB connection error:", err));
 
-
-app.use(cors({
-  origin: 'http://localhost:3000',
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL || "http://localhost:3000",
+    credentials: true,
+  })
+);
 app.use(express.json());
 app.use(cookieParser());
 
-//Api routes
+// API routes
 app.use("/api/auth", authRoute);
 app.use("/api/users", userRoute);
 app.use("/api/gigs", gigRoute);
@@ -40,17 +38,13 @@ app.use("/api/conversations", conversationRoute);
 app.use("/api/messages", messageRoute);
 // app.use("/api/reviews", reviewRoute);
 
+// Error handler
 app.use((err, req, res, next) => {
   const errorStatus = err.status || 500;
   const errorMessage = err.message || "Something went wrong!";
-
-  return res.status(errorStatus).send(errorMessage);
+  return res.status(errorStatus).json({ success: false, message: errorMessage });
 });
 
-const PORT = process.env.PORT || 8800;
-
-app.listen(PORT, () => {
-  connectDB();
-  console.log("Started");
-});
+// ❌ Remove app.listen()
+// ✅ Export app for Vercel
 export default app;
