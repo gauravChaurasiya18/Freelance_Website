@@ -6,7 +6,6 @@ import gigRoute from "./routes/gig.route.js";
 import orderRoute from "./routes/order.route.js";
 import conversationRoute from "./routes/conversation.route.js";
 import messageRoute from "./routes/message.route.js";
-// import reviewRoute from "./routes/review.route.js";
 import authRoute from "./routes/auth.route.js";
 import cookieParser from "cookie-parser";
 import cors from "cors";
@@ -14,11 +13,11 @@ import cors from "cors";
 dotenv.config();
 const app = express();
 
-// Connect MongoDB as soon as app is initialized
+// Connect MongoDB
 mongoose
   .connect(process.env.MONGO)
   .then(() => console.log("✅ Connected to MongoDB"))
-  .catch((err) => console.error("❌ MongoDB connection error:", err));
+  .catch((err) => console.error("❌ Mongo error:", err));
 
 app.use(
   cors({
@@ -36,15 +35,19 @@ app.use("/api/gigs", gigRoute);
 app.use("/api/orders", orderRoute);
 app.use("/api/conversations", conversationRoute);
 app.use("/api/messages", messageRoute);
-// app.use("/api/reviews", reviewRoute);
+
+// Health check
+app.get("/", (req, res) => {
+  res.send("Backend is running 🚀");
+});
 
 // Error handler
 app.use((err, req, res, next) => {
-  const errorStatus = err.status || 500;
-  const errorMessage = err.message || "Something went wrong!";
-  return res.status(errorStatus).json({ success: false, message: errorMessage });
+  res.status(err.status || 500).json({
+    success: false,
+    message: err.message || "Something went wrong!",
+  });
 });
 
-// ❌ Remove app.listen()
-// ✅ Export app for Vercel
+// 👉 Export (no app.listen)
 export default app;
